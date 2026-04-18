@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --text: #1a1917;
+    --muted: #8a8580;
+    --faint: #c9c5be;
+    --accent: #b8a99a;
+    --border: rgba(0,0,0,0.07);
+    --tag-bg: #ede9e3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141312;
+      --surface: #1e1c1a;
+      --surface2: #252320;
+      --text: #e8e4de;
+      --muted: #7a7570;
+      --faint: #3a3835;
+      --accent: #7a6b5e;
+      --border: rgba(255,255,255,0.06);
+      --tag-bg: #2a2826;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+  }
+
+  .topbar-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .topbar-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .profile-strip {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1.5px solid var(--faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .avatar svg { opacity: 0.4; }
+
+  .profile-info { flex: 1; }
+
+  .profile-handle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .profile-bio {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    opacity: 0.7;
+    font-style: italic;
+    font-family: 'Instrument Serif', serif;
+  }
+
+  .profile-stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+  }
+
+  .stat { text-align: center; }
+  .stat-num { font-size: 15px; font-weight: 500; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .scroll-hint {
+    text-align: center;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .feed {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .post {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 14px;
+    cursor: default;
+    transition: background 0.15s;
+  }
+
+  .post:hover { background: var(--surface2); }
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .post-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--faint);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .post-meta { flex: 1; }
+
+  .post-username {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .post-time {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .post-more {
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .post-body {
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .post-body-inner {
+    outline: none;
+    min-height: 20px;
+    display: block;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+  }
+
+  .post-body-inner[contenteditable="true"] {
+    background: rgba(180, 165, 140, 0.08);
+    border: 1px dashed var(--faint);
+    cursor: text;
+  }
+
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    padding: 0;
+    transition: color 0.15s;
+  }
+
+  .action-btn:hover { color: var(--text); }
+
+  .action-btn svg { opacity: 0.6; }
+
+  .action-btn.liked { color: #c07070; }
+  .action-btn.liked svg { opacity: 1; }
+
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: transform 0.15s;
+    z-index: 200;
+  }
+
+  .fab:hover { transform: scale(1.07); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    width: 100%;
+    max-width: 480px;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    animation: slideup 0.25s ease;
+  }
+
+  @keyframes slideup {
+    from { transform: translateY(60px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--faint);
+    margin: 0 auto 16px;
+  }
+
+  .modal-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+
+  .modal-time-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .modal-time-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .modal-time-input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--surface2);
+    border: 1px solid var(--faint);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--text);
+    width: 90px;
+  }
+
+  .modal-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--faint);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--text);
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+  }
+
+  .modal-textarea:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--faint);
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .btn-post {
+    background: var(--text);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--bg);
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .edit-toggle {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    background: var(--surface);
+    border: 1px solid var(--faint);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    z-index: 200;
+  }
+
+  .edit-toggle.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .export-btn {
+    position: fixed;
+    bottom: 64px;
+    left: 24px;
+    background: var(--surface);
+    border: 1px solid var(--faint);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    z-index: 200;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .export-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .export-btn.saved {
+    color: #7a9e7a;
+    border-color: #7a9e7a;
+  }
+
+  .date-divider {
+    text-align: center;
+    padding: 14px 20px 10px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    background: var(--bg);
+  }
+
+  .avatar-svg { width: 20px; height: 20px; opacity: 0.35; }
+
+  .mood-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #b8a09a;
+    display: inline-block;
+    margin-left: 6px;
+    vertical-align: middle;
+    opacity: 0.55;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-name">journal</div>
+  <div class="topbar-right">
+    <div class="topbar-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <div class="topbar-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </div>
+  </div>
+</div>
+
+<div class="profile-strip">
+  <div class="avatar">
+    <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+  </div>
+  <div class="profile-info">
+    <div class="profile-handle">@private <span class="mood-dot"></span></div>
+    <div class="profile-bio">writing things down so they stop living in my head</div>
+    <div class="profile-stats">
+      <div class="stat">
+        <div class="stat-num" id="post-count">5</div>
+        <div class="stat-label">entries</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">private</div>
+        <div class="stat-label">account</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll-hint">↓ scroll</div>
+
+<div class="feed" id="feed">
+
+  <!-- entries-->
+  <div class="post" data-id="1">
+    <div class="post-header">
+      <div class="post-avatar">
+        <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="post-meta">
+        <div class="post-username">private <span class="mood-dot"></span></div>
+        <div class="post-time" contenteditable="false" data-field="time">7:16 PM</div>
+      </div>
+      <div class="post-more">···</div>
+    </div>
+    <div class="post-body">
+      <span class="post-body-inner" contenteditable="false">I wish no one will try to convince me to stay once I decide I want to die.</span>
+    </div>
+    <div class="post-actions">
+      <button class="action-btn" onclick="toggleLike(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>0</span>
+      </button>
+      <button class="action-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>reply</span>
+      </button>
+      <button class="action-btn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>share</span>
+      </button>
+    </div>
+  </div>
+
+
+  <div class="post" data-id="2">
+    <div class="post-header">
+      <div class="post-avatar">
+        <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="post-meta">
+        <div class="post-username">private <span class="mood-dot"></span></div>
+        <div class="post-time" contenteditable="false" data-field="time">7:22 PM</div>
+      </div>
+      <div class="post-more">···</div>
+    </div>
+    <div class="post-body">
+      <span class="post-body-inner" contenteditable="false">Am I a bad person if I don't want to see my dad anymore. I get that he has it hard too but I feel it's unhealthy for me to try and have a good relationship with him. I've tried. It doesn't work. Every time I see him I just feel repulsed. Am I a bad daughter? I want to pretend our relationship will go anywhere but I can't. He really makes me feel like dying sometimes. Is it bad if I just don't want to talk to him or see him?</span>
+    </div>
+    <div class="post-actions">
+      <button class="action-btn" onclick="toggleLike(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>0</span>
+      </button>
+      <button class="action-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>reply</span>
+      </button>
+      <button class="action-btn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>share</span>
+      </button>
+    </div>
+  </div>
+
+
+  <div class="post" data-id="3">
+    <div class="post-header">
+      <div class="post-avatar">
+        <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="post-meta">
+        <div class="post-username">private <span class="mood-dot"></span></div>
+        <div class="post-time" contenteditable="false" data-field="time">7:27 PM</div>
+      </div>
+      <div class="post-more">···</div>
+    </div>
+    <div class="post-body">
+      <span class="post-body-inner" contenteditable="false">He made me hate all men from a very early age. I know he's just one guy and doesn't represent the rest of his gender but I still feel that way. I wonder why my mom even married him sometimes and I wonder why I'm here. I don't have to be here. They won't notice if one incompetent person left right? It won't make a difference. I feel so selfish. I don't know. I don't want anything. I just wish if I had to live I could live by myself and peacefully. I want to have a therapist to talk to and a few friends to go out with. I want to eat fruits and chicken and feel good about myself. I want to be in autumn and be cozy in bed. But I can't.</span>
+    </div>
+    <div class="post-actions">
+      <button class="action-btn" onclick="toggleLike(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>0</span>
+      </button>
+      <button class="action-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>reply</span>
+      </button>
+      <button class="action-btn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>share</span>
+      </button>
+    </div>
+  </div>
+
+
+  <div class="post" data-id="4">
+    <div class="post-header">
+      <div class="post-avatar">
+        <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="post-meta">
+        <div class="post-username">private <span class="mood-dot"></span></div>
+        <div class="post-time" contenteditable="false" data-field="time">7:32 PM</div>
+      </div>
+      <div class="post-more">···</div>
+    </div>
+    <div class="post-body">
+      <span class="post-body-inner" contenteditable="false">I have so many things I need to do and sometimes I wish it would all stop. I know this sounds like self pity and u don't have to read all of it. If I had to go on I would choose not to. Maybe it would all be different if someone else is in my place. They would probably be stronger than me right now. They would probably be more ambitious and passionate about things they like. I don't know how to do that and I don't think I want to try. I don't think it's worth it. I'd rather not live at all if it means to have to feel all these things about myself. Even if life is also beautiful I'd happily trade it away if it means I don't have to feel anymore. Feeling is so exhausting. But I'm scared to die</span>
+    </div>
+    <div class="post-actions">
+      <button class="action-btn" onclick="toggleLike(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>0</span>
+      </button>
+      <button class="action-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>reply</span>
+      </button>
+      <button class="action-btn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>share</span>
+      </button>
+    </div>
+  </div>
+
+
+  <div class="post" data-id="5">
+    <div class="post-header">
+      <div class="post-avatar">
+        <svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <div class="post-meta">
+        <div class="post-username">private <span class="mood-dot"></span></div>
+        <div class="post-time" contenteditable="false" data-field="time">8:44 PM</div>
+      </div>
+      <div class="post-more">···</div>
+    </div>
+    <div class="post-body">
+      <span class="post-body-inner" contenteditable="false">When I grow up, if I grow up, I'm faking my disappearance so I never have to talk to my dad again. I'll never ever become like him or surround myself with people like him. I will live alone with a bunch of cats and stare at the stars with them.
+They won't judge me. I'll die after they die or maybe help them find new homes before I die. I wish</span>
+    </div>
+    <div class="post-actions">
+      <button class="action-btn" onclick="toggleLike(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>0</span>
+      </button>
+      <button class="action-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>reply</span>
+      </button>
+      <button class="action-btn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>share</span>
+      </button>
+    </div>
+  </div>
+
+
+
+</div>
+
+<button class="fab" onclick="openModal()" title="New entry">+</button>
+<button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✎ edit mode</button>
+<button class="export-btn" id="exportBtn" onclick="exportHTML()">↓ export</button>
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">new entry</div>
+    <div class="modal-time-row">
+      <span class="modal-time-label">time</span>
+      <input type="text" class="modal-time-input" id="newTime" placeholder="e.g. 9:15 PM">
+    </div>
+    <textarea class="modal-textarea" id="newText" placeholder="write something..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">cancel</button>
+      <button class="btn-post" onclick="addPost()">post</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let editMode = false;
+
+  function exportHTML() {
+    if (editMode) toggleEdit();
+    const clone = document.documentElement.cloneNode(true);
+    const livePosts = document.querySelectorAll(".post");
+    const clonePosts = clone.querySelectorAll(".post");
+    livePosts.forEach((livePost, i) => {
+      const clonePost = clonePosts[i];
+      if (!clonePost) return;
+      const liveBody = livePost.querySelector(".post-body-inner");
+      const cloneBody = clonePost.querySelector(".post-body-inner");
+      if (liveBody && cloneBody) cloneBody.innerHTML = liveBody.innerHTML;
+      const liveTime = livePost.querySelector(".post-time");
+      const cloneTime = clonePost.querySelector(".post-time");
+      if (liveTime && cloneTime) cloneTime.textContent = liveTime.textContent;
+    });
+    const cloneCount = clone.querySelector("#post-count");
+    if (cloneCount) cloneCount.textContent = livePosts.length;
+    const overlay = clone.querySelector("#modalOverlay");
+    if (overlay) overlay.classList.remove("open");
+    const et = clone.querySelector("#editToggle");
+    if (et) { et.classList.remove("active"); et.textContent = "✎ edit mode"; }
+    const html = "<!DOCTYPE html>\n" + clone.outerHTML;
+    const blob = new Blob([html], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "diary_feed.html";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    const btn = document.getElementById("exportBtn");
+    btn.classList.add("saved");
+    btn.textContent = "✓ saved";
+    setTimeout(() => { btn.classList.remove("saved"); btn.textContent = "↓ export"; }, 2000);
+  }
+
+  function toggleEdit() {
+    editMode = !editMode;
+    const toggle = document.getElementById('editToggle');
+    toggle.classList.toggle('active', editMode);
+    toggle.textContent = editMode ? '✓ done editing' : '✎ edit mode';
+
+    document.querySelectorAll('.post-body-inner, .post-time').forEach(el => {
+      el.contentEditable = editMode ? 'true' : 'false';
+    });
+  }
+
+  function toggleLike(btn) {
+    btn.classList.toggle('liked');
+    const span = btn.querySelector('span');
+    span.textContent = btn.classList.contains('liked') ? '1' : '0';
+  }
+
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    document.getElementById('newTime').value = `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+    document.getElementById('newText').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('newText').value = '';
+  }
+
+  function closeOnOverlay(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function addPost() {
+    const time = document.getElementById('newTime').value.trim() || 'now';
+    const text = document.getElementById('newText').value.trim();
+    if (!text) return;
+
+    const feed = document.getElementById('feed');
+    const postCount = feed.querySelectorAll('.post').length + 1;
+
+    const avatarSVG = `<svg class="avatar-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`;
+
+    const post = document.createElement('div');
+    post.className = 'post';
+    post.dataset.id = postCount;
+    post.innerHTML = `
+      <div class="post-header">
+        <div class="post-avatar">${avatarSVG}</div>
+        <div class="post-meta">
+          <div class="post-username">private <span class="mood-dot"></span></div>
+          <div class="post-time" contenteditable="false" data-field="time">${time}</div>
+        </div>
+        <div class="post-more">···</div>
+      </div>
+      <div class="post-body">
+        <span class="post-body-inner" contenteditable="false">${text.replace(/\n/g, '<br>')}</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn" onclick="toggleLike(this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>0</span>
+        </button>
+        <button class="action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>reply</span>
+        </button>
+        <button class="action-btn" style="margin-left:auto;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>share</span>
+        </button>
+      </div>
+    `;
+
+    const comment = feed.querySelector('div + !--');
+    feed.appendChild(post);
+
+    document.getElementById('post-count').textContent = feed.querySelectorAll('.post').length;
+
+    if (editMode) {
+      post.querySelectorAll('.post-body-inner, .post-time').forEach(el => {
+        el.contentEditable = 'true';
+      });
+    }
+
+    closeModal();
+    post.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
